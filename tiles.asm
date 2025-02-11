@@ -1,7 +1,7 @@
 INCLUDE "charmap.inc"
 
 FontTiles:
-    ; Since the font files are black-and-white, they're stored 1-bit-per-pixel (8 bytes per sprite) instead of the usual 2 bpp format
+    ; Since the font tiles are black-and-white, they're stored 1-bit-per-pixel (8 bytes per sprite) instead of the usual 2 bpp format
 
     db $00, $3c, $66, $66, $66, $66, $3c, $00,   $00, $18, $38, $18, $18, $18, $3c, $00
     db $00, $3c, $4e, $0e, $3c, $70, $7e, $00,   $00, $7c, $0e, $3c, $0e, $0e, $7c, $00

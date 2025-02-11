@@ -408,8 +408,8 @@ jr_000_0293:
 Jump_000_029a:
     ld a, IEF_VBLANK
     di
-    ldh [rIF], a ; enable VBLANK interrupt
-    ldh [rIE], a
+    ldh [rIF], a
+    ldh [rIE], a ; enable VBLANK interrupt
 
     xor a
     ldh [rSCY], a
@@ -545,11 +545,10 @@ jr_000_0319:
     ld a, %00001001 ; Enable serial + VBlank interrupts
     ldh [rIE], a
 
-    ; ???
     ld a, $37
-    ldh [$ffc0], a
+    ldh [$ffc0], a ; Set default game type
     ld a, $1c
-    ldh [$ffc1], a
+    ldh [$ffc1], a ; Set default music type
 
     set_state LicenseScreen
 
@@ -754,7 +753,6 @@ RunWaitForLicenseCounter:
     and a
     ret nz
 
-    .continue:
     set_state InitTitleScreen
     ret
 
@@ -813,23 +811,22 @@ jr_000_0456:
     ld a, $03
     ld [$dfe8], a
 
-    ; Enable LCD
     ld a, %11010011
-    ldh [rLCDC], a
+    ldh [rLCDC], a ; Enable LCD
 
     set_state TitleScreen
 
     ; Set up the counter which keeps track of how long to display the title screen for
     ld a, $7d
     ldh [$ffa6], a
-    ld a, $04 ; Set to 4 (wait $047d = 1149 frames) if titlescreen demo has already been shown
+    ld a, $04 ; Set to 4 (wait $047d = 1149 frames) if the demo has already been shown
     ldh [$ffc6], a
 
     ldh a, [$ffe4] ; Check if the demo has been shown yet
     and a
     ret nz
 
-    ld a, $13 ; Set to 13 (wait $137d = 4989 frames) if titlescreen demo has NOT yet been shown
+    ld a, $13 ; Set to 13 (wait $137d = 4989 frames) if the demo has NOT yet been shown
     ldh [$ffc6], a
     ret
 
@@ -1457,7 +1454,7 @@ jr_000_07b0:
 
 jr_000_07b7:
     ld de, $c210
-    call Call_000_17ca
+    call DoBlink
     ld hl, $ffad
     jr jr_000_082a
 
@@ -1536,7 +1533,7 @@ jr_000_0819:
 
 jr_000_0821:
     ld de, $c200
-    call Call_000_17ca
+    call DoBlink
     ld hl, $ffac
 
 jr_000_082a:
@@ -3925,6 +3922,7 @@ jr_000_149b:
 
 
 RunInitGameOptionsScreen:
+    ; Disable interrupts/registers related to multi-player
     ld a, IEF_VBLANK 
     ldh [rIE], a
 
@@ -3935,7 +3933,6 @@ RunInitGameOptionsScreen:
 
 Call_000_14b3:
     call DisableLCD
-
     call LoadGameTiles
 
     ld de, GameOptionsTilemap
@@ -3963,8 +3960,11 @@ jr_000_14e1:
     ld [de], a
     call Call_000_26c5
     call Call_000_157b
-    ld a, $d3
+
+    ; Enable LCD
+    ld a, %11010011
     ldh [rLCDC], a
+
     set_state MysteryState2
     ret
 
@@ -4004,7 +4004,7 @@ Call_000_14f6:
 
 Call_000_1514:
     ld de, $c200
-    call Call_000_17ca
+    call DoBlink
     ld hl, $ffc1
     ld a, [hl]
     bit 3, b
@@ -4101,21 +4101,24 @@ jr_000_1585:
 
 RunMysteryState2:
     ld de, $c210
-    call Call_000_17ca
-    ld hl, $ffc0
+    call DoBlink
+
+    ld hl, $ffc0 ; Check the selected game type
     ld a, [hl]
-    bit 3, b
+
+    bit PADB_START, b
     jr nz, jr_000_15c7
 
-    bit 0, b
+    bit PADB_A, b
     jr nz, jr_000_15db
 
     inc e
     inc e
-    bit 4, b
+
+    bit PADB_RIGHT, b
     jr nz, jr_000_15af
 
-    bit 5, b
+    bit PADB_LEFT, b
     jr z, jr_000_15c3
 
     cp $37
@@ -4208,7 +4211,7 @@ jr_000_1620:
 
 
     ld de, $c200
-    call Call_000_17ca
+    call DoBlink
     ld hl, $ffc2
     ld a, $0a
     bit 3, b
@@ -4339,7 +4342,7 @@ jr_000_16d9:
 
 
     ld de, $c200
-    call Call_000_17ca
+    call DoBlink
     ld hl, $ffc3
     ld a, $0a
     bit 3, b
@@ -4433,7 +4436,7 @@ jr_000_174a:
 
 
     ld de, $c210
-    call Call_000_17ca
+    call DoBlink
     ld hl, $ffc4
     ld a, $0a
     bit 3, b
@@ -4539,18 +4542,23 @@ Call_000_17b9:
     ret
 
 
-Call_000_17ca:
+DoBlink:
+    ; Read gamepad state into B
     ldh a, [$ff81]
     ld b, a
-    ldh a, [$ffa6]
+
+    ldh a, [$ffa6] ; Check counter, and do nothing if it hasn't reached 0
     and a
     ret nz
 
-    ld a, $10
+    ; When counter hits 0,
+    ld a, $10 ; Reset to 10
     ldh [$ffa6], a
+
     ld a, [de]
-    xor $80
+    xor $80 ; Toggle the highest bit in [de]
     ld [de], a
+
     ret
 
 
