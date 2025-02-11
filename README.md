@@ -1,6 +1,6 @@
 # (Game Boy) Tetris, Disassembled
 
-Yeah, another Tetris disassembly. Shout-out
+Yeah, another Tetris disassembly.
 
 WIP. Not even close to done. But the eventual goal is to have a thoroughly-commented and hackable disassembly of Tetris. And also to not get sued.
 
