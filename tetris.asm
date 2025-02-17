@@ -7927,20 +7927,25 @@ LoadGameTiles:
 
 
 LoadFontTiles:
-    ld hl, FontTiles
-    ld bc, $0138
-    ld de, $8000
+    ld hl, FontTiles ; source
+    ld bc, $0138     ; # of bytes to copy
+    ld de, $8000     ; destination
 
-jr_000_2820:
+.loop:
+    ; Copy over one byte
     ld a, [hl+]
     ld [de], a
     inc de
+
+    ; Copy the same byte over again, to essentially convert the 1bpp font tiles to 2bpp
     ld [de], a
     inc de
+
+    ; decrement counter and check if done
     dec bc
     ld a, b
     or c
-    jr nz, jr_000_2820
+    jr nz, .loop
 
     ret
 
