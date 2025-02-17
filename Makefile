@@ -1,4 +1,4 @@
-IMAGE_DEPS = gfx/image_000_3287.2bpp gfx/image_000_3e87.2bpp gfx/image_001_41a7.2bpp gfx/image_001_4ba7.2bpp gfx/image_001_4fef.2bpp
+IMAGE_DEPS = gfx/image_000_3e87.2bpp
 
 all: build/game.gb
 
