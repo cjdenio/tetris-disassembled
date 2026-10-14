@@ -66,19 +66,25 @@ RST_20::
     rst $38
     rst $38
 
-RST_28::
-    add a
-    pop hl
+ActuallyRunStateMachine:
+    add a ; multiply `a` by 2
+
+    pop hl ; hl is the address that `ActuallyRunStateMachine` was called from, plus 1.
+           ; In practice, this is usually `RunStateMachine.end`
+
     ld e, a
     ld d, $00
-    add hl, de
+    add hl, de ; Add `a` to `hl`
+
+    ; Fetch a 16-bit word from [hl] and place it in `de`
     ld e, [hl]
     inc hl
-
-RST_30::
     ld d, [hl]
+
+    ; move `de` to `hl`
     push de
     pop hl
+
     jp hl
 
 
@@ -571,8 +577,8 @@ Main:
 
     ; Reset game if all 4 buttons pressed (A, B, Start, Select)
     ldh a, [$ff80]
-    and %00001111
-    cp  %00001111
+    and $0F
+    cp  $0F
     jp z, Jump_000_029a
     ; ^^^^^^^^^^
 
@@ -617,7 +623,7 @@ jr_000_036c:
 
 RunStateMachine:
     ldh a, [$ffe1]
-    rst $28
+    rst ActuallyRunStateMachine
 .end
 
 ; ----------------------------------------------------
@@ -727,13 +733,13 @@ RunLicenseScreen:
     ld hl, $c300
     ld de, $64d0
 
-jr_000_03fb:
+.loop:
     ld a, [de]
     ld [hl+], a
     inc de
     ld a, h
     cp $c4
-    jr nz, jr_000_03fb
+    jr nz, .loop
     ; ^^^^^^^^^^
 
     ld a, %11010011
@@ -754,6 +760,7 @@ RunWaitForLicenseCounter:
     ret nz
 
     set_state InitTitleScreen
+
     ret
 
 
@@ -770,11 +777,13 @@ RunInitTitleScreen:
     ldh [$ffe3], a
     ldh [$ffe7], a
     ldh [$ffc7], a
+
     call Call_000_22f3 ; clear some memory
     call Call_000_26a5 ; clear some more memory
-    call LoadTitleTiles
-    ld hl, $c800
 
+    call LoadTitleTiles
+
+    ld hl, $c800
 jr_000_043b:
     ld a, $2f
     ld [hl+], a
@@ -800,7 +809,7 @@ jr_000_0456:
 
     call ClearOAM
 
-    ; Draw the 1-/2-player selector to the object layer on screen (OAM)
+    ; Draw the 1-/2-player selector to the object layer (OAM)
     ld hl, $c000
     ld [hl], $80 ; y-position
     inc l
@@ -828,6 +837,7 @@ jr_000_0456:
 
     ld a, $13 ; Set to 13 (wait $137d = 4989 frames) if the demo has NOT yet been shown
     ldh [$ffc6], a
+
     ret
 
 
